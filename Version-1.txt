@@ -1,0 +1,1077 @@
+\documentclass[a4paper,12pt]{article}
+
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{pgfplotstable}
+\usepackage{tcolorbox}
+\usepackage{siunitx}
+\usepackage{amsmath}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage[american]{circuitikz}
+
+\pgfplotsset{compat=1.18}
+\usepgfplotslibrary{groupplots}
+
+\usetikzlibrary{
+  3d,
+  arrows.meta,
+  calc,
+  decorations.markings,
+  decorations.pathmorphing,
+  fadings,
+  patterns,
+  perspective,
+  positioning,
+  shapes.geometric,
+  shadings,
+}
+
+\geometry{margin=1in}
+
+\title{\textbf{Open TikZ Library}}
+\author{}
+\date{}
+
+\newsavebox{\SpinBox}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+% ============================================================
+\section{Seebeck Effect}
+\begin{figure}[H]
+\centering
+\scalebox{0.75}{
+\begin{tikzpicture}[scale=0.3, font=\sffamily, >=stealth,
+  decoration={
+    markings,
+    mark=at position 0.05 with {\arrow[black]{stealth};},
+    mark=at position 0.40 with {\arrow[black]{stealth};},
+    mark=at position 0.60 with {\arrow[black]{stealth};},
+    mark=at position 0.95 with {\arrow[black]{stealth};}
+  },
+  gradient/.style={bottom color=blue!50, top color=red},
+  pics/p charge/.style={code={
+    \node[fill=orange, shape=circle, inner sep=0pt] (pc) {+};
+    \draw[thick,->] (pc) -- ++(0,-0.5);
+  }},
+  pics/n charge/.style={code={
+    \node[fill=cyan, shape=circle, inner sep=1pt, scale=1.2] (nc) {-};
+    \draw[thick,->] (nc) -- ++(0,-0.5);
+  }},
+]
+  \def\heatsink{
+    \draw[fill=blue] (0,0,0) rectangle ++(6,1.5,0)
+      node[midway, color=white]{heat sink};
+    \draw[fill=blue] (6,0,0) -- ++(0,1.5,0) -- ++(0,0,-3) -- ++(0,-1.5,0) -- cycle;
+    \draw[fill=blue] (0,1.5,0) -- ++(6,0,0) -- ++(0,0,-3) -- ++(-6,0,0) -- cycle;
+    \draw[gradient, opacity=0.5] (0.5,1.5,-2.8) -- ++(0,10,0);
+    \draw[gradient, opacity=0.5] (0.5,1.5,-2.8) -- ++(5,0,0);
+  }
+  % N-type leg
+  \begin{scope}
+    \heatsink
+    \draw[gradient, opacity=0.5] (0.5,1.5,-2.8) -- ++(0,0,2.6);
+    \fill[gradient, opacity=0.7] (5.5,1.5,-0.2) -- ++(0,10,0) -- ++(0,0,-2.6) -- ++(0,-10,0) -- cycle;
+    \fill[gradient, opacity=0.7] (0.5,1.5,-0.2) rectangle ++(5,10,0)
+      node[midway, draw, circle, white] (N) {N};
+    \pic[below left=8mm  and 3mm] at (N) {n charge};
+    \pic[below right=7mm and 6mm] at (N) {n charge};
+    \pic[above left=1cm  and 3mm] at (N) {n charge};
+    \pic[above right=1cm and 5mm] at (N) {n charge};
+  \end{scope}
+  % P-type leg
+  \begin{scope}[xshift=15cm]
+    \heatsink
+    \draw[gradient, opacity=0.5] (0.5,1.5,-2.8) -- ++(0,0,2.6);
+    \fill[gradient, opacity=0.7] (5.5,1.5,-0.2) -- ++(0,10,0) -- ++(0,0,-2.6) -- ++(0,-10,0) -- cycle;
+    \fill[gradient, opacity=0.7] (0.5,1.5,-0.2) rectangle ++(5,10,0)
+      node[midway, draw, circle, white] (P) {P};
+    \pic[below left=8mm  and 3mm] at (P) {p charge};
+    \pic[below right=7mm and 6mm] at (P) {p charge};
+    \pic[above left=1cm  and 3mm] at (P) {p charge};
+    \pic[above right=1cm and 5mm] at (P) {p charge};
+  \end{scope}
+  % Heat source (top)
+  \draw[fill=red] (0,11.5,0) rectangle ++(21,1.5,0)
+    node[midway, white] (J) {$J\longrightarrow$};
+  \draw[fill=red] (21,11.5,0) -- ++(0,1.5,0) -- ++(0,0,-3) -- ++(0,-1.5,0) -- cycle;
+  \draw[fill=red] (0,13,0) -- ++(21,0,0)
+    node[color=white, above right=0 and -5mm, pos=0.5]{heat source}
+    -- ++(0,0,-3) -- ++(-21,0,0) -- cycle;
+  % Electric field arrows
+  \node[below=1cm, scale=1.3, align=center] at (11,11.5) {electric\\field};
+  \draw[thick,-stealth] (6.8,10,-1.5)  node[below right=1mm]{+}
+    -- ++(0,-7,0) node[above right=1mm, scale=1.2]{--};
+  \draw[thick,-stealth] (14.1,3,-1.5)  node[above left=1mm]{+}
+    -- ++(0,7,0)  node[below left=1mm,  scale=1.2]{--};
+  % External resistor + current loop
+  \draw[postaction={decorate}]
+    (21,0.75,-1.5) -- ++(3,0,0) -- ++(0,-3,0)
+    to[R] ++(-27,0,0)
+    |- (0,0.75,0);
+\end{tikzpicture}
+
+
+% ============================================================
+}
+\caption{Seebeck effect showing thermoelectric voltage generation in N-type and P-type legs under a temperature gradient.}
+\label{fig:seebeck}
+\end{figure}
+\newpage
+
+% ============================================================
+\section{Peltier Effect}
+\begin{figure}[H]
+\centering
+\scalebox{0.75}{
+\begin{tikzpicture}[scale=0.3, font=\sffamily, >=stealth,
+  decoration={
+    markings,
+    mark=at position 0.05 with {\arrow[black]{stealth};},
+    mark=at position 0.40 with {\arrow[black]{stealth};},
+    mark=at position 0.60 with {\arrow[black]{stealth};},
+    mark=at position 0.95 with {\arrow[black]{stealth};}
+  },
+  gradient hot/.style={bottom color=red, top color=red!20},
+  pics/p charge/.style={code={
+    \node[fill=orange, shape=circle, inner sep=0pt] (pc) {+};
+    \draw[thick,->] (pc) -- ++(0,0.5);
+  }},
+  pics/n charge/.style={code={
+    \node[fill=cyan, shape=circle, inner sep=1pt, scale=1.2] (nc) {-};
+    \draw[thick,->] (nc) -- ++(0,0.5);
+  }},
+]
+  \def\hotplate{
+    \draw[fill=red] (0,0,0) rectangle ++(6,1.5,0)
+      node[midway, color=white]{hot side};
+    \draw[fill=red] (6,0,0) -- ++(0,1.5,0) -- ++(0,0,-3) -- ++(0,-1.5,0) -- cycle;
+    \draw[fill=red] (0,1.5,0) -- ++(6,0,0) -- ++(0,0,-3) -- ++(-6,0,0) -- cycle;
+  }
+  % N-type leg
+  \begin{scope}
+    \hotplate
+    \draw[gradient hot, opacity=0.5] (0.5,1.5,-2.8) -- ++(0,0,2.6);
+    \fill[gradient hot, opacity=0.7] (5.5,1.5,-0.2) -- ++(0,10,0) -- ++(0,0,-2.6) -- ++(0,-10,0) -- cycle;
+    \fill[gradient hot, opacity=0.7] (0.5,1.5,-0.2) rectangle ++(5,10,0)
+      node[midway, draw, circle, white] (N) {N};
+    \pic[below left=8mm  and 3mm] at (N) {n charge};
+    \pic[below right=7mm and 6mm] at (N) {n charge};
+    \pic[above left=1cm  and 3mm] at (N) {n charge};
+    \pic[above right=1cm and 5mm] at (N) {n charge};
+  \end{scope}
+  % P-type leg
+  \begin{scope}[xshift=15cm]
+    \hotplate
+    \draw[gradient hot, opacity=0.5] (0.5,1.5,-2.8) -- ++(0,0,2.6);
+    \fill[gradient hot, opacity=0.7] (5.5,1.5,-0.2) -- ++(0,10,0) -- ++(0,0,-2.6) -- ++(0,-10,0) -- cycle;
+    \fill[gradient hot, opacity=0.7] (0.5,1.5,-0.2) rectangle ++(5,10,0)
+      node[midway, draw, circle, white] (P) {P};
+    \pic[below left=8mm  and 3mm] at (P) {p charge};
+    \pic[below right=7mm and 6mm] at (P) {p charge};
+    \pic[above left=1cm  and 3mm] at (P) {p charge};
+    \pic[above right=1cm and 5mm] at (P) {p charge};
+  \end{scope}
+  % Cold side (top)
+  \draw[fill=blue!70] (0,11.5,0) rectangle ++(21,1.5,0)
+    node[midway, white] {$\longleftarrow Q_{\mathrm{cold}}$};
+  \draw[fill=blue!70] (21,11.5,0) -- ++(0,1.5,0) -- ++(0,0,-3) -- ++(0,-1.5,0) -- cycle;
+  \draw[fill=blue!70] (0,13,0) -- ++(21,0,0) -- ++(0,0,-3) -- ++(-21,0,0) -- cycle;
+  \node[color=blue!70, above=2mm, align=center] at (10.5,13,0) {cold side (heat absorbed)};
+  % Current flow arrows
+  \node[below=1cm, scale=1.3, align=center] at (11,11.5) {current\\flow};
+  \draw[thick,-stealth] (6.8,3,-1.5) -- ++(0,7,0) node[above right=1mm]{$I$};
+  \draw[thick,-stealth] (14.1,10,-1.5) -- ++(0,-7,0) node[below right=1mm]{$I$};
+  % External voltage source
+  \draw[postaction={decorate}]
+    (21,0.75,-1.5) -- ++(3,0,0) -- ++(0,-3,0)
+    to[battery1, l=$V$] ++(-27,0,0)
+    |- (0,0.75,0);
+  \node[below=1.5cm, scale=1.2, align=center, red] at (11,8) {$Q_{\mathrm{hot}}$\\released};
+\end{tikzpicture}
+
+
+% ============================================================
+}
+\caption{Peltier effect demonstrating heat absorption and release due to applied current in thermoelectric materials.}
+\label{fig:peltier}
+\end{figure}
+\newpage
+
+% ============================================================
+\section{Landauer Transport Formalism}
+\begin{figure}[H]
+\centering
+\scalebox{0.85}{
+\begin{tikzpicture}[thick, font=\small]
+
+% Row 1: circuit diagrams
+% (a) open-circuit
+\node at (0, 1.8)  {(a)};
+\node at (2, 1.8)  {open-circuit};
+\shade[left color=gray!60, right color=green!70!black]
+  (0,0) rectangle (4,0.6);
+\draw (0,0) rectangle (4,0.6);
+\fill (0,0.3) circle (2pt);
+\fill (4,0.3) circle (2pt);
+\draw (0,0.3) -- (0,1.2) -- (4,1.2) -- (4,0.3);
+\draw (1.9,0.85) -- (1.9,1.45);
+\draw (2.1,1.05) -- (2.1,1.35);
+\node at (1.8,1.5) {$+$};
+\node[left]  at (0,0.3) {$\mu_1$};
+\node[right] at (4,0.3) {$\mu_2$};
+
+% (b) short-circuit
+\begin{scope}[xshift=8.5cm]
+  \node at (0, 1.8) {(b)};
+  \node at (2, 1.8) {short-circuit};
+  \shade[left color=red!80, right color=blue!80]
+    (0,0) rectangle (4,0.6);
+  \draw (0,0) rectangle (4,0.6);
+  \fill (0,0.3) circle (2pt);
+  \fill (4,0.3) circle (2pt);
+  \draw (0,0.3) -- (0,1.2) -- (4,1.2) -- (4,0.3);
+  \node[left]  at (0,0.3) {$T_H$};
+  \node[right] at (4,0.3) {$T_C$};
+\end{scope}
+
+% 2×2 pgfplots group
+\begin{scope}[yshift=-5.5cm]
+\begin{groupplot}[
+  group style={
+    group size=2 by 2,
+    horizontal sep=2.5cm,
+    vertical sep=2.5cm,
+  },
+  width=6.5cm,
+  height=5.5cm,
+  axis lines=left,
+  clip=false,
+  enlargelimits=false,
+]
+% (a1) chemical potential shift
+\nextgroupplot[
+  title={(a1)},
+  xlabel={Energy (eV)},
+  ylabel={Occupation ($f$)},
+  domain=-0.25:0.25,
+  samples=400,
+  ymin=0, ymax=1.1,
+  xmin=-0.25, xmax=0.25,
+]
+\addplot[gray, thick]  {1/(exp((x+0.05)/0.02)+1)};
+\addplot[green!60!black, thick] {1/(exp((x-0.05)/0.02)+1)};
+\node at (axis cs:-0.13,0.55) {$\mu_1$};
+\node at (axis cs:0.09,0.55) {$\mu_2$};
+
+% (b1) temperature gradient
+\nextgroupplot[
+  title={(b1)},
+  xlabel={Energy (eV)},
+  ylabel={Occupation ($f$)},
+  domain=-0.25:0.25,
+  samples=400,
+  ymin=0, ymax=1.1,
+  xmin=-0.25, xmax=0.25,
+]
+\addplot[red, thick]  {1/(exp((x)/0.04)+1)};
+\addplot[blue, thick] {1/(exp((x)/0.015)+1)};
+\node at (axis cs:-0.12,0.65) {$T_H$};
+\node at (axis cs:0.06,0.35) {$T_C$};
+
+% (a2) selection function -df/dE
+\nextgroupplot[
+  title={(a2)},
+  xlabel={$(E-\mu)/kT$},
+  ylabel={Selection Function ($\phi$)},
+  domain=-8:8,
+  samples=400,
+  ymin=0, ymax=0.32,
+  xmin=-8, xmax=8,
+]
+\addplot[black, thick] {exp(x)/(exp(x)+1)^2};
+\node at (axis cs:-3.5,0.22) {$\phi = -\dfrac{df}{dE}$};
+
+% (b2) selection function (E-mu)(-df/dE)
+\nextgroupplot[
+  title={(b2)},
+  xlabel={$(E-\mu)/kT$},
+  ylabel={Selection Function ($\phi$)},
+  domain=-8:8,
+  samples=400,
+  ymin=-0.55, ymax=0.55,
+  xmin=-8, xmax=8,
+]
+\addplot[black, thick] {x*exp(x)/(exp(x)+1)^2};
+\addplot[black, dashed, thin] coordinates {(-8,0) (8,0)};
+\node at (axis cs:-2.5,0.42) {$\phi=(E-\mu)\!\left(-\dfrac{df}{dE}\right)$};
+\end{groupplot}
+\end{scope}
+\end{tikzpicture}
+}
+\caption{Landauer transport model illustrating open-circuit and short-circuit conditions along with energy-dependent selection functions.}
+\label{fig:landauer}
+\end{figure}
+\newpage
+
+% ============================================================
+\section{Thermoelectric Figure of Merit ($zT$)}
+\begin{figure}[H]
+\centering
+\scalebox{0.85}{
+\begin{tikzpicture}
+  \begin{axis}[
+      xmode=log,
+      domain=1e17:1e21,
+      ymax=1,
+      enlargelimits=false,
+      ylabel=$zT$,
+      xlabel=Carrier concentration $n$ (\si{\per\centi\meter\cubed}),
+      grid=both,
+      width=12cm,
+      height=8cm,
+      decoration={name=none},
+    ]
+    % zT curve
+    \addplot [ultra thick, smooth, red!85!black] coordinates {
+        (1.174e+18, 0.2317)(1.551e+18, 0.2787)(2.016e+18, 0.3300)
+        (2.549e+18, 0.3816)(3.171e+18, 0.4332)(3.891e+18, 0.4842)
+        (4.697e+18, 0.5373)(5.623e+18, 0.5892)(6.714e+18, 0.6404)
+        (8.017e+18, 0.6923)(9.650e+18, 0.7450)(1.178e+19, 0.7963)
+        (1.461e+19, 0.8486)(1.878e+19, 0.8964)(2.481e+19, 0.9278)
+        (3.279e+19, 0.9318)(4.334e+19, 0.9057)(5.515e+19, 0.8571)
+        (6.662e+19, 0.8045)(7.767e+19, 0.7519)(8.859e+19, 0.7000)
+        (1.008e+20, 0.6476)(1.143e+20, 0.5953)(1.290e+20, 0.5449)
+        (1.447e+20, 0.4906)(1.628e+20, 0.4374)(1.837e+20, 0.3850)
+        (2.101e+20, 0.3327)(2.436e+20, 0.2799)(2.887e+20, 0.2281)
+        (3.594e+20, 0.1753)(4.674e+20, 0.1271)(6.178e+20, 0.08917)
+        (8.167e+20, 0.06240)(1e+21, 0.05)
+      } node[pos=0.48, anchor=north] {$zT$};
+    % sigma curve
+    \addplot [ultra thick, smooth, blue!70!black] coordinates {
+        (1.176e+18, 0.005689)(1.554e+18, 0.008070)(2.054e+18, 0.009285)
+        (2.714e+18, 0.01216)(3.587e+18, 0.01561)(4.740e+18, 0.02190)
+        (6.264e+18, 0.02984)(8.277e+18, 0.04013)(1.094e+19, 0.05127)
+        (1.445e+19, 0.06820)(1.910e+19, 0.09120)(2.511e+19, 0.1191)
+        (3.333e+19, 0.1593)(4.344e+19, 0.2072)(5.433e+19, 0.2587)
+        (6.613e+19, 0.3123)(7.852e+19, 0.3739)(8.925e+19, 0.4266)
+        (1.001e+20, 0.4779)(1.110e+20, 0.5310)(1.224e+20, 0.5824)
+        (1.335e+20, 0.6359)(1.441e+20, 0.6893)(1.551e+20, 0.7425)
+        (1.660e+20, 0.7960)(1.767e+20, 0.8478)(1.876e+20, 0.9009)
+        (1.986e+20, 0.9532)(2.08e+20, 1)
+      } node[pos=0.95, anchor=east] {$\sigma$};
+    % kappa curve
+    \addplot [ultra thick, smooth, green!70!black] coordinates {
+        (1.175e+18, 0.08187)(1.553e+18, 0.08218)(2.053e+18, 0.08379)
+        (2.713e+18, 0.08472)(3.585e+18, 0.08684)(4.738e+18, 0.08916)
+        (6.261e+18, 0.09142)(8.274e+18, 0.09411)(1.093e+19, 0.09912)
+        (1.445e+19, 0.1059)(1.909e+19, 0.1145)(2.523e+19, 0.1256)
+        (3.334e+19, 0.1391)(4.405e+19, 0.1576)(5.821e+19, 0.1830)
+        (7.691e+19, 0.2164)(1.016e+20, 0.2605)(1.302e+20, 0.3102)
+        (1.589e+20, 0.3629)(1.882e+20, 0.4143)(2.181e+20, 0.4641)
+        (2.472e+20, 0.5181)(2.764e+20, 0.5714)(3.066e+20, 0.6246)
+        (3.363e+20, 0.6780)(3.669e+20, 0.7310)(3.981e+20, 0.7826)
+        (4.273e+20, 0.8389)(4.560e+20, 0.8942)(4.868e+20, 0.9493)
+        (5.2e+20, 1)
+      } node[pos=0.95, anchor=west] {$\kappa$};
+    % S (Seebeck) curve
+    \addplot [ultra thick, smooth, orange] coordinates {
+        (1.65e+18, 1)(1.931e+18, 0.9729)(2.553e+18, 0.9248)
+        (3.375e+18, 0.8777)(4.462e+18, 0.8302)(5.899e+18, 0.7816)
+        (7.745e+18, 0.7351)(1.031e+19, 0.6866)(1.363e+19, 0.6397)
+        (1.802e+19, 0.5897)(2.382e+19, 0.5412)(3.149e+19, 0.4937)
+        (4.162e+19, 0.4471)(5.503e+19, 0.3977)(7.117e+19, 0.3500)
+        (9.181e+19, 0.2944)(1.224e+20, 0.2436)(1.618e+20, 0.2019)
+        (2.138e+20, 0.1687)(2.826e+20, 0.1389)(3.736e+20, 0.1161)
+        (4.938e+20, 0.09646)(6.321e+20, 0.08022)(8.578e+20, 0.06624)
+        (1e+21, 0.06)
+      } node[pos=0.1, anchor=south west] {$S$};
+    % S^2 sigma (power factor) curve
+    \addplot [ultra thick, smooth, cyan] coordinates {
+        (1.159e+18, 0.04006)(1.532e+18, 0.04739)(2.025e+18, 0.05790)
+        (2.676e+18, 0.06974)(3.386e+18, 0.08033)(4.675e+18, 0.09928)
+        (6.179e+18, 0.1176)(8.168e+18, 0.1379)(1.080e+19, 0.1608)
+        (1.427e+19, 0.1864)(1.886e+19, 0.2142)(2.492e+19, 0.2430)
+        (3.294e+19, 0.2713)(4.353e+19, 0.2989)(5.754e+19, 0.3230)
+        (7.605e+19, 0.3422)(1.005e+20, 0.3528)(1.314e+20, 0.3509)
+        (1.757e+20, 0.3326)(2.327e+20, 0.3049)(3.071e+20, 0.2777)
+        (4.061e+20, 0.2535)(5.369e+20, 0.2304)(7.098e+20, 0.2095)
+        (1e+21, 0.185)
+      } node[pos=0.4, anchor=south east] {$S^2 \sigma$};
+  \end{axis}
+\end{tikzpicture}
+
+
+% ============================================================
+}
+\caption{Variation of thermoelectric figure of merit ($zT$), electrical conductivity, thermal conductivity, and Seebeck coefficient with carrier concentration.}
+\label{fig:zt}
+\end{figure}
+\newpage
+
+% ============================================================
+\section{Degrees of Freedom in Thermoelectrics}
+\begin{figure}[H]
+\centering
+\scalebox{0.75}{
+\begin{lrbox}{\SpinBox}%
+  \begin{tikzpicture}[3d view={30}{20}, scale=0.32]
+    \draw[thick] (0,0,-2) -- (0,0,-3.6);
+    \draw[top color=red!80, bottom color=green!65]
+      (0,0,0) circle (2cm);
+    \draw[thick,-latex] (0,0,2) -- (0,0,4)
+      node[above,font=\tiny\sffamily]{$\vec\mu$};
+    \draw[-latex,thin] (180:3.0) arc(180:420:3.0)
+      node[above,font=\tiny\sffamily]{$\vec\omega$};
+  \end{tikzpicture}%
+\end{lrbox}
+
+\resizebox{0.8\linewidth}{!}{
+\begin{tikzpicture}[
+  font=\sffamily,
+  solidline/.style={thick, gray!70},
+  dashedline/.style={dashed, gray!50, thin},
+  >=Stealth
+]
+\coordinate (Lattice)  at ( 0.0,  4.0);
+\coordinate (Electron) at ( 4.5,  0.8);
+\coordinate (Orbit)    at ( 1.0, -4.0);
+\coordinate (Spin)     at (-4.5, -0.5);
+
+\draw[solidline] (Lattice) -- (Electron);
+\draw[solidline] (Electron) -- (Orbit);
+\draw[solidline] (Orbit) -- (Spin);
+\draw[solidline] (Spin) -- (Lattice);
+\draw[solidline] (Lattice) -- (Orbit);
+\draw[dashedline] (Electron) -- (Spin);
+
+\pgfmathsetmacro{\sphR}{1.35}
+\coordinate (sS) at (-0.15, 1.05);
+\coordinate (sK) at ( 0.95,-0.55);
+\coordinate (sG) at (-1.05,-0.55);
+
+\begin{scope}[opacity=0.35]
+  \shade[ball color=blue!15!white]  (sS) circle (\sphR cm);
+  \shade[ball color=red!15!white]   (sK) circle (\sphR cm);
+  \shade[ball color=magenta!15!white] (sG) circle (\sphR cm);
+\end{scope}
+\node[font=\Huge\bfseries\sffamily, text=blue!80!black]
+  at ({(-0.15+0.95-1.05)/3}, {(1.05-0.55-0.55)/3}) {zT};
+\draw[gray!40, thin] (sS) circle (\sphR cm);
+\draw[gray!40, thin] (sK) circle (\sphR cm);
+\draw[gray!40, thin] (sG) circle (\sphR cm);
+
+\node[font=\large\itshape, text=red!75!black] at ( -0.15, 1.65) {$S$};
+\node[font=\large\itshape, text=red!75!black] at (-1.25,  0.15) {$\sigma$};
+\node[font=\large\itshape, text=red!75!black] at ( 1.15,  0.15) {$\kappa$};
+
+\fill[red!85!black]  (Lattice)  circle (4pt);
+\fill[red!70!orange] (Electron) circle (4pt);
+\fill[red!40!pink]   (Orbit)    circle (4pt);
+\fill[pink!80!red]   (Spin)     circle (4pt);
+
+\node[above=4pt, font=\small\bfseries] at (Lattice)  {Lattice};
+\node[right=4pt, font=\small\bfseries] at (Electron) {Electrons};
+\node[below=4pt, font=\small\bfseries] at (Orbit)    {Orbit};
+\node[left=4pt,  font=\small\bfseries] at (Spin)     {Spin};
+
+\coordinate (LatticeInset)  at ( 2.8,  7.5);
+\coordinate (ElectronInset) at ( 8.2,  1.5);
+\coordinate (OrbitInset)    at ( 3.5, -7.5);
+\coordinate (SpinInset)     at (-8.2, -2.8);
+
+\draw[dashedline] (Lattice)  -- (LatticeInset);
+\draw[dashedline] (Electron) -- (ElectronInset);
+\draw[dashedline] (Orbit)    -- (OrbitInset);
+\draw[dashedline] (Spin)     -- (SpinInset);
+
+% Inset 1 — Lattice honeycomb
+\begin{scope}[shift={(LatticeInset)}]
+  \draw[gray!40,fill=gray!8,line width=0.6pt] (0,0) circle (1.18cm);
+  \foreach \a in {0,60,120,180,240,300}{
+    \fill[red!60!brown] (\a:0.54cm) circle (2.8pt);
+    \draw[gray!55,thin] (\a:0.54cm)--({\a+60}:0.54cm);
+  }
+  \foreach \a in {30,90,150,210,270,330}{
+    \fill[red!60!brown] (\a:0.92cm) circle (2.8pt);
+    \draw[gray!55,thin] (\a:0.92cm)--({\a-30}:0.54cm);
+    \draw[gray!55,thin] (\a:0.92cm)--({\a+30}:0.54cm);
+  }
+\end{scope}
+
+% Inset 2 — Electron sphere
+\begin{scope}[shift={(ElectronInset)}]
+  \draw[gray!40,fill=gray!8,line width=0.6pt] (0,0) circle (1.08cm);
+  \shade[ball color=red!55!brown] (-0.18,0) circle (0.40cm);
+  \node[font=\scriptsize, text=white] at (-0.18,0) {$e^-$};
+  \draw[->,thick,gray!75,line width=1.3pt] (0.28,0)--(0.88,0);
+\end{scope}
+
+% Inset 3 — p-orbital
+\begin{scope}[shift={(OrbitInset)}]
+  \draw[gray!40,fill=gray!8,line width=0.6pt] (0,0) circle (1.18cm);
+  \begin{scope}
+    \clip (0,0) circle (1.12cm);
+    \fill[teal!70!blue]
+      (0,0.07) .. controls (-0.52,0.32) and (-0.44,1.02) .. (0,1.02)
+               .. controls ( 0.44,1.02) and ( 0.52,0.32) .. (0,0.07);
+    \draw[teal!80,thin]
+      (0,0.07) .. controls (-0.52,0.32) and (-0.44,1.02) .. (0,1.02)
+               .. controls ( 0.44,1.02) and ( 0.52,0.32) .. (0,0.07);
+    \fill[teal!50!blue]
+      (0,-0.07) .. controls (-0.52,-0.32) and (-0.44,-1.02) .. (0,-1.02)
+                .. controls ( 0.44,-1.02) and ( 0.52,-0.32) .. (0,-0.07);
+    \draw[teal!70,thin]
+      (0,-0.07) .. controls (-0.52,-0.32) and (-0.44,-1.02) .. (0,-1.02)
+                .. controls ( 0.44,-1.02) and ( 0.52,-0.32) .. (0,-0.07);
+    \fill[white,opacity=0.85] (0,0) ellipse (0.56cm and 0.17cm);
+    \draw[gray!60,thin]       (0,0) ellipse (0.56cm and 0.17cm);
+    \draw[gray!45,dashed,thin] (0.56,0) arc(0:-180:0.56cm and 0.17cm);
+  \end{scope}
+  \draw[->,gray!65,line width=0.9pt]
+    (0,-1.18)--(0,1.28) node[above,font=\tiny]{$z$};
+\end{scope}
+
+% Inset 4 — Spin sphere
+\node[circle,draw=gray!40,fill=gray!8,minimum size=3.1cm,
+      inner sep=0pt,line width=0.6pt] at (SpinInset) {};
+\node[inner sep=0pt] at (SpinInset) {\usebox{\SpinBox}};
+
+\node[align=left,text width=6.2cm,font=\footnotesize\sffamily]
+  at (-8.5, 5.5) {4 Degrees of Freedom for improving \textit{zT}.};
+\end{tikzpicture}}
+
+
+% ============================================================
+}
+\caption{Interdependence of Seebeck coefficient, electrical conductivity, and thermal conductivity in determining thermoelectric performance ($zT$).}
+\label{fig:dof}
+\end{figure}
+\newpage
+
+% ============================================================
+\section{Point Defect Scattering}
+\begin{figure}[H]
+\centering
+\scalebox{0.85}{
+\begin{tikzpicture}[
+  AN/.style={circle, fill=blue!60, draw=blue!80, minimum size=14pt, inner sep=0pt},
+  CA/.style={circle, fill=red!70,  draw=red!80,  minimum size=9pt,  inner sep=0pt},
+  VN/.style={circle, fill=white, draw=blue!60, dashed, line width=1.2pt, minimum size=14pt, inner sep=0pt},
+  VC/.style={circle, fill=white, draw=red!60,  dashed, line width=1.2pt, minimum size=9pt,  inner sep=0pt},
+  FO/.style={circle, fill=yellow!80, draw=orange!60, minimum size=13pt, inner sep=0pt},
+  IN/.style={circle, fill=orange!90, draw=orange!70, minimum size=11pt, inner sep=0pt},
+  lbl/.style={font=\footnotesize\bfseries, align=center},
+]
+\def\s{0.58}
+
+%% Panel 1 – Schottky pair
+\begin{scope}[xshift=0cm, yshift=4.4cm]
+  \foreach \r in {0,1,2,3} \foreach \c in {0,1,2,3} {
+    \pgfmathtruncatemacro\p{mod(\r+\c,2)}
+    \pgfmathtruncatemacro\skip{ifthenelse((\r==3)&&(\c==0),1,ifthenelse((\r==3)&&(\c==1),1,0))}
+    \ifnum\skip=0
+      \ifnum\p=0 \node[AN] at (\c*\s,\r*\s){};
+      \else       \node[CA] at (\c*\s,\r*\s){};
+      \fi
+    \fi
+  }
+  \node[VN] at (0*\s, 3*\s){};
+  \node[VC] at (1*\s, 3*\s){};
+  \draw[dashed, violet!60, line width=1.2pt, fill=violet!10, fill opacity=0.55, rounded corners=6pt]
+    (-0.16, 3*\s-0.20) rectangle (1*\s+0.23, 3*\s+0.20);
+  \node[lbl] (L1) at (0.75, 3*\s+0.90) {Schottky\\pair};
+  \draw[->, thick, violet!70] (L1.south) -- (0.32, 3*\s+0.22);
+\end{scope}
+
+%% Panel 2 – Vacancy
+\begin{scope}[xshift=2.7cm, yshift=4.4cm]
+  \foreach \r in {0,1,2,3} \foreach \c in {0,1,2,3} {
+    \pgfmathtruncatemacro\p{mod(\r+\c,2)}
+    \pgfmathtruncatemacro\skip{ifthenelse((\r==2)&&(\c==2),1,0)}
+    \ifnum\skip=0
+      \ifnum\p=0 \node[AN] at (\c*\s,\r*\s){};
+      \else       \node[CA] at (\c*\s,\r*\s){};
+      \fi
+    \fi
+  }
+  \node[VN] at (2*\s, 2*\s){};
+  \node[lbl] (L2) at (0.75, 3*\s+0.90) {Vacancy};
+  \draw[->, thick, blue!60] (L2.south) -- (2*\s, 2*\s+0.20);
+\end{scope}
+
+%% Panel 3 – Frenkel pair
+\begin{scope}[xshift=5.4cm, yshift=4.4cm]
+  \foreach \r in {0,1,2,3} \foreach \c in {0,1,2,3} {
+    \pgfmathtruncatemacro\p{mod(\r+\c,2)}
+    \pgfmathtruncatemacro\skip{ifthenelse((\r==3)&&(\c==0),1,0)}
+    \ifnum\skip=0
+      \ifnum\p=0 \node[AN] at (\c*\s,\r*\s){};
+      \else       \node[CA] at (\c*\s,\r*\s){};
+      \fi
+    \fi
+  }
+  \node[VN] at (0*\s, 3*\s){};
+  \node[CA] at (3*\s+0.30, 2*\s+0.29){};
+  \draw[dashed, purple!60, line width=1.2pt, fill=purple!10, fill opacity=0.55, rounded corners=6pt]
+    (-0.16, 2*\s+0.08) rectangle (3*\s+0.52, 3*\s+0.20);
+  \node[lbl] (L3) at (0.75, 3*\s+0.90) {Frenkel\\pair};
+  \draw[->, thick, purple!70] (L3.south) -- (0.22, 3*\s+0.22);
+\end{scope}
+
+%% Panel 4 – Substitutional
+\begin{scope}[xshift=0cm, yshift=0cm]
+  \foreach \r in {0,1,2,3} \foreach \c in {0,1,2,3} {
+    \pgfmathtruncatemacro\p{mod(\r+\c,2)}
+    \pgfmathtruncatemacro\skip{ifthenelse((\r==2)&&(\c==2),1,0)}
+    \ifnum\skip=0
+      \ifnum\p=0 \node[AN] at (\c*\s,\r*\s){};
+      \else       \node[CA] at (\c*\s,\r*\s){};
+      \fi
+    \fi
+  }
+  \node[FO] at (2*\s, 2*\s){};
+  \node[lbl] (L4) at (0.75, 3*\s+0.90) {Substitutional};
+  \draw[->, thick, orange!80] (L4.south) -- (2*\s, 2*\s+0.20);
+\end{scope}
+
+%% Panel 5 – Antisite
+\begin{scope}[xshift=2.7cm, yshift=0cm]
+  \foreach \r in {0,1,2,3} \foreach \c in {0,1,2,3} {
+    \pgfmathtruncatemacro\p{mod(\r+\c,2)}
+    \pgfmathtruncatemacro\skip{ifthenelse((\r==2)&&(\c==1),1,ifthenelse((\r==2)&&(\c==2),1,0))}
+    \ifnum\skip=0
+      \ifnum\p=0 \node[AN] at (\c*\s,\r*\s){};
+      \else       \node[CA] at (\c*\s,\r*\s){};
+      \fi
+    \fi
+  }
+  \node[AN] at (1*\s, 2*\s){};
+  \node[CA] at (2*\s, 2*\s){};
+  \draw[dashed, green!60!black, line width=1.2pt, fill=green!10, fill opacity=0.55, rounded corners=6pt]
+    (1*\s-0.18, 2*\s-0.20) rectangle (2*\s+0.18, 2*\s+0.20);
+  \node[lbl] (L5) at (0.75, 3*\s+0.90) {Antisite};
+  \draw[->, thick, green!60!black] (L5.south) -- (1.5*\s, 2*\s+0.22);
+\end{scope}
+
+%% Panel 6 – Interstitial
+\begin{scope}[xshift=5.4cm, yshift=0cm]
+  \foreach \r in {0,1,2,3} \foreach \c in {0,1,2,3} {
+    \pgfmathtruncatemacro\p{mod(\r+\c,2)}
+    \ifnum\p=0 \node[AN] at (\c*\s,\r*\s){};
+    \else       \node[CA] at (\c*\s,\r*\s){};
+    \fi
+  }
+  \node[IN] at (1*\s+0.29, 1*\s+0.29){};
+  \node[lbl] (L6) at (0.75, 3*\s+0.90) {Interstitial};
+  \draw[->, thick, orange!70] (L6.south) -- (1*\s+0.29, 1*\s+0.50);
+\end{scope}
+
+%% Legend
+\node[AN, label=right:{\footnotesize Anion}]  at (0.0, -1.1){};
+\node[CA, label=right:{\footnotesize Cation}] at (1.6, -1.1){};
+\node[FO, label=right:{\footnotesize Substitutional}] at (3.2, -1.1){};
+\node[IN, label=right:{\footnotesize Interstitial}] at (5.8, -1.1){};
+\end{tikzpicture}
+
+
+% ============================================================
+}
+\caption{Different types of point defects including Schottky pairs, Frenkel pairs, vacancies, substitutional, antisite, and interstitial defects.}
+\label{fig:defects}
+\end{figure}
+\newpage
+
+% ============================================================
+\section{Thermoelectric Module Architecture}
+\begin{figure}[H]
+\centering
+\scalebox{0.7}{
+\begin{tikzpicture}[
+    scale=0.55,
+    font=\sffamily\small,
+    >=stealth,
+]
+    \colorlet{ceramicgray}{gray!30}
+    \def\legW{3}
+    \def\legH{5}
+    \def\gap{1.8}
+    \def\copH{0.5}
+    \def\cerH{0.6}
+    \def\sinkH{1.2}
+    \def\finH{1.8}
+    \def\depth{2.5}
+
+    \pgfmathsetmacro{\totalW}{\legW+\gap+\legW}
+    \pgfmathsetmacro{\padX}{0.8}
+    \pgfmathsetmacro{\outerW}{\totalW+2*\padX}
+
+    \pgfmathsetmacro{\yA}{0}
+    \pgfmathsetmacro{\yB}{\yA+\finH}
+    \pgfmathsetmacro{\yC}{\yB+\sinkH}
+    \pgfmathsetmacro{\yD}{\yC+\cerH}
+    \pgfmathsetmacro{\yE}{\yD+\copH}
+    \pgfmathsetmacro{\yF}{\yE+\legH}
+    \pgfmathsetmacro{\yG}{\yF+\copH}
+    \pgfmathsetmacro{\yH}{\yG+\cerH}
+
+    \pgfmathsetmacro{\xL}{0}
+    \pgfmathsetmacro{\xR}{\outerW}
+    \pgfmathsetmacro{\legLx}{\padX}
+    \pgfmathsetmacro{\legLxR}{\padX+\legW}
+    \pgfmathsetmacro{\legRx}{\padX+\legW+\gap}
+    \pgfmathsetmacro{\legRxR}{\padX+2*\legW+\gap}
+
+    \newcommand{\iiibox}[5]{
+        \fill[#5, draw=black] (#1,#2) rectangle ++(#3,#4);
+        \fill[#5!80!black, draw=black]
+            (#1,{#2+#4}) -- ++(#3,0)
+            -- ++({0.4*\depth},{0.3*\depth}) -- ++({-#3},0) -- cycle;
+        \fill[#5!60!black, draw=black]
+            ({#1+#3},#2) -- ++(0,#4)
+            -- ++({0.4*\depth},{0.3*\depth}) -- ++(0,{-#4}) -- cycle;
+    }
+
+    \pgfmathsetmacro{\nFins}{9}
+    \pgfmathsetmacro{\finW}{\outerW/\nFins}
+    \foreach \i in {0,2,...,8}{
+        \pgfmathsetmacro{\fx}{\xL+\i*\finW}
+        \iiibox{\fx}{\yA}{\finW}{\finH}{blue!50!black}
+    }
+    \iiibox{\xL}{\yB}{\outerW}{\sinkH}{blue!70!black}
+    \iiibox{\xL}{\yC}{\outerW}{\cerH}{ceramicgray}
+    \iiibox{\legLx}{\yD}{\legW}{\copH}{orange!90!yellow}
+    \iiibox{\legRx}{\yD}{\legW}{\copH}{orange!90!yellow}
+    \iiibox{\legLx}{\yE}{\legW}{\legH}{green!70!black}
+    \iiibox{\legRx}{\yE}{\legW}{\legH}{pink!80!white}
+
+    \node[white, font=\sffamily\bfseries\large] at ({\legLx+\legW/2},{\yE+\legH/2}) {P};
+    \node[white, font=\sffamily\bfseries\large] at ({\legRx+\legW/2},{\yE+\legH/2}) {N};
+
+    \foreach \dx/\dy in {0.6/3.8, 1.5/3.5, 2.4/3.8, 0.6/1.6, 1.5/1.3, 2.4/1.6}{
+        \node[fill=orange!80, circle, inner sep=1.5pt, font=\tiny\bfseries]
+            (h) at ({\legLx+\dx},{\yE+\dy}) {+};
+        \draw[->, thick, orange!80!black] (h) -- ++(0,-0.55);
+    }
+    \foreach \dx/\dy in {0.6/3.8, 1.5/3.5, 2.4/3.8, 0.6/1.6, 1.5/1.3, 2.4/1.6}{
+        \node[fill=cyan!80, circle, inner sep=1.5pt, font=\tiny\bfseries]
+            (e) at ({\legRx+\dx},{\yE+\dy}) {--};
+        \draw[->, thick, cyan!80!black] (e) -- ++(0,-0.55);
+    }
+
+    \iiibox{\legLx}{\yF}{\totalW}{\copH}{orange!80!yellow}
+    \iiibox{\xL}{\yG}{\outerW}{\cerH}{ceramicgray}
+
+    \draw[<-, thick] ({\xL},{\yG+\cerH/2}) -- ++(-2.8,0.8)
+        node[left, align=right, font=\sffamily\footnotesize] {Ceramic substrate};
+    \draw[<-, thick] ({\legLx},{\yF+\copH/2}) -- ++(-3.2,0)
+        node[left, align=right, font=\sffamily\footnotesize] {Copper-conductor};
+    \draw[<-, thick] ({\legLx},{\yE+\legH*0.5}) -- ++(-3.2,0)
+        node[left, font=\sffamily\footnotesize] {P-type leg};
+    \draw[<-, thick] ({\legRxR+0.4*\depth},{\yE+\legH*0.5+0.3*\depth})
+        -- ++(3.0,0)
+        node[right, font=\sffamily\footnotesize] {N-type leg};
+    \draw[<-, thick] ({\legRxR+0.4*\depth},{\yD+\copH/2+0.3*\depth})
+        -- ++(3.0,1.0)
+        node[right, align=left, font=\sffamily\footnotesize] {Copper-conductor};
+    \draw[<-, thick] ({\xR+0.4*\depth},{\yC+\cerH/2+0.3*\depth})
+        -- ++(2.0,0.6)
+        node[right, align=left, font=\sffamily\footnotesize] {Ceramic substrate};
+    \draw[->, thick] ({\outerW/2},{\yA}) -- ++(0,-1.3)
+        node[below, font=\sffamily\footnotesize] {Heat sink (cold side)};
+    \draw[->, ultra thick, red!70!black] ({\outerW/2},{\yH+3.0})
+        node[above, font=\sffamily\footnotesize, black] {Heat absorbed (hot side)}
+        -- ++(0,-2.2);
+
+    \pgfmathsetmacro{\circY}{\yD+\copH/2}
+    \draw[thick, decoration={markings,
+        mark=at position 0.25 with {\arrow{stealth}},
+        mark=at position 0.75 with {\arrow{stealth}}
+    }, postaction={decorate}]
+        ({\legLx},{\circY}) -- ++(-3.8,0) -- ++(0,-6.5)
+        -- ++({\outerW+7.6},0) -- ++(0,6.5) -- ({\legRxR},{\circY});
+    \pgfmathsetmacro{\resY}{\circY-6.5}
+    \pgfmathsetmacro{\resCX}{\outerW/2+1}
+    \draw[thick] ({\resCX-1.2},\resY) -- ++(0.3,0.3) -- ++(0.3,-0.6)
+        -- ++(0.3,0.6) -- ++(0.3,-0.6) -- ++(0.3,0.6) -- ++(0.3,-0.3);
+    \node[below, font=\sffamily\footnotesize] at (\resCX,{\resY-0.6}) {$R_{\mathrm{load}}$};
+    \node[font=\sffamily\bfseries] at ({\legLx-4.3},{\circY}) {$-$};
+    \node[font=\sffamily\bfseries] at ({\legRxR+4.3},{\circY}) {$+$};
+    \node[font=\sffamily\footnotesize] at ({\resCX},{\resY-1.5}) {External circuit};
+\end{tikzpicture}
+
+
+% ============================================================
+}
+\caption{Three-dimensional schematic of a thermoelectric generator module showing P-type and N-type legs, electrodes, and heat flow.}
+\label{fig:module}
+\end{figure}
+\newpage
+
+% ============================================================
+\section{Efficiency vs Heat Source Temperature}
+\begin{figure}[H]
+\centering
+\scalebox{0.85}{
+\begin{tikzpicture}
+\begin{axis}[
+    width=13cm, height=9.5cm,
+    xmin=350, xmax=1470,
+    ymin=0,   ymax=0.82,
+    xlabel={\textbf{Heat source temperature (K)}},
+    ylabel={\textbf{Power generation efficiency}},
+    xlabel style={font=\small\bfseries},
+    ylabel style={font=\small\bfseries},
+    tick label style={font=\small},
+    xtick={400,600,800,1000,1200,1400},
+    xticklabels={400,600,800,{1{,}000},{1{,}200},{1{,}400}},
+    ytick={0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8},
+    axis lines=box,
+    axis line style={thick, black},
+    clip=true,
+    enlarge x limits=false,
+    enlarge y limits=false,
+]
+\addplot[black, very thick, smooth, domain=310:1490, samples=200] {1 - 300/x};
+\node[black, font=\small] at (axis cs:1100,0.755) {Carnot cycle};
+
+\addplot[gray!70, thick, dashed, smooth, domain=310:1490, samples=200] {1 - sqrt(300/x)};
+\node[gray!60, font=\scriptsize, align=left] at (axis cs:1320,0.595) {Curzon-Ahlborn limit};
+
+\addplot[yellow!70!orange, dotted, very thick, smooth, domain=310:1490, samples=200]
+    { (1-300/x)*(sqrt(21)-1)/(sqrt(21)+300/x) };
+\node[yellow!60!orange, font=\small] at (axis cs:1390,0.645) {$zT = 20$};
+
+\addplot[blue!70, thick, smooth, domain=310:1490, samples=200]
+    { (1-300/x)*(sqrt(5)-1)/(sqrt(5)+300/x) };
+\node[blue!70, font=\small] at (axis cs:1390,0.418) {$zT = 4$};
+
+\addplot[green!60!black, dashed, thick, smooth, domain=310:1490, samples=200]
+    { (1-300/x)*(sqrt(3)-1)/(sqrt(3)+300/x) };
+\node[green!60!black, font=\small] at (axis cs:1390,0.310) {$zT = 2$};
+
+\addplot[brown!70, thick, smooth, domain=310:1490, samples=200]
+    { (1-300/x)*(sqrt(1.5)-1)/(sqrt(1.5)+300/x) };
+\node[brown!70, font=\small] at (axis cs:1390,0.153) {$zT = 0.5$};
+
+\node[magenta!90, font=\tiny\bfseries] at (axis cs:490,0.053) {Thermoelectric};
+\node[magenta!50, font=\tiny\bfseries] at (axis cs:620,0.148) {Thermionic};
+
+\addplot[only marks, mark=*, mark size=2.5pt,
+         mark options={fill=red!80, draw=red!20, line width=1pt}]
+    coordinates {
+        (440,0.135)(500,0.160)(540,0.360)(840,0.460)
+        (600,0.300)(680,0.290)(1150,0.480)(1100,0.430)
+    };
+
+\node[red!80, font=\tiny, align=left, anchor=south] at (axis cs:448,0.558) {Cement/organic Rankine};
+\draw[->, red!60, thin] (axis cs:440,0.555) -- (axis cs:440,0.142);
+\node[red!80, font=\tiny, align=left, anchor=south west] at (axis cs:416,0.492) {Alkine metal cell};
+\draw[->, red!60, thin] (axis cs:464,0.490) -- (axis cs:500,0.167);
+\node[red!80, font=\tiny, align=left, anchor=west] at (axis cs:556,0.385) {Solar/Stirling};
+\draw[->, red!60, thin] (axis cs:555,0.375) -- (axis cs:542,0.362);
+\node[red!80, font=\tiny, align=left, anchor=west] at (axis cs:612,0.315) {Nuclear/Rankine};
+\draw[->, red!60, thin] (axis cs:611,0.307) -- (axis cs:602,0.302);
+\node[red!80, font=\tiny, align=left, anchor=west] at (axis cs:692,0.270) {Solar/Rankine};
+\draw[->, red!60, thin] (axis cs:691,0.278) -- (axis cs:682,0.292);
+\node[red!80, font=\tiny, align=left, anchor=west] at (axis cs:854,0.474) {Coal/Rankine};
+\draw[->, red!60, thin] (axis cs:853,0.466) -- (axis cs:843,0.462);
+\node[red!80, font=\tiny, align=left, anchor=west] at (axis cs:960,0.492) {Nuclear/Brayton};
+\draw[->, red!60, thin] (axis cs:1092,0.490) -- (axis cs:1148,0.480);
+\node[red!80, font=\tiny, align=left, anchor=north] at (axis cs:978,0.405) {Solar/Brayton};
+\draw[->, red!60, thin] (axis cs:1038,0.413) -- (axis cs:1096,0.432);
+\end{axis}
+\end{tikzpicture}
+
+
+% ============================================================
+}
+\caption{Efficiency comparison of thermoelectric devices with Carnot and Curzon--Ahlborn limits for different values of $zT$.}
+\label{fig:efficiency}
+\end{figure}
+\newpage
+
+% ============================================================
+\section{Laser Flash Analysis (LFA)}
+\begin{figure}[H]
+\centering
+\scalebox{0.9}{
+\begin{tikzpicture}[
+thick,
+font=\sffamily,
+>=Stealth
+]
+\def\W{6}
+\def\H{1.2}
+\def\abs{0.3}
+
+\draw[line width=1.5pt, fill=gray!20] (0,0) rectangle (\W,\H);
+\draw[line width=1.5pt, pattern=north east lines] (0,0) rectangle (\W,\abs);
+\node at (\W/2,0.75) {\large Sample};
+
+\draw ( \W,\H) -- (\W+1.2,\H);
+\node[right] at (\W+1.2,\H) {x=L};
+\draw (\W,0) -- (\W+1.2,0);
+\node[right] at (\W+1.2,0) {x=0};
+
+\draw[<->] (-0.8,0) -- (-0.8,\abs);
+\draw (-0.5,0) -- (0,0);
+\draw (-0.5,\abs) -- (0,\abs);
+\node[left] at (-0.8,\abs/2) {g};
+
+\foreach \x in {1.5,3,4.5}
+{
+    \draw[fill=gray!30] (\x-0.35,-1.6) rectangle (\x+0.35,-0.8);
+    \draw[fill=gray!30]
+    (\x-0.7,-0.8) --
+    (\x+0.7,-0.8) --
+    (\x,0) -- cycle;
+}
+\node at (\W/2,-2.2) {\Large Laser pulse};
+\end{tikzpicture}
+
+
+% ============================================================
+}
+\caption{Laser flash analysis setup illustrating sample geometry and transient heat pulse propagation.}
+\label{fig:lfa}
+\end{figure}
+\newpage
+
+% ============================================================
+\section{Parker Function}
+\begin{figure}[H]
+\centering
+\scalebox{0.9}{
+\begin{tikzpicture}
+\begin{axis}[
+    width=0.5\textwidth,
+    height=0.5\textwidth,
+    xmin=0, xmax=10,
+    ymin=0, ymax=1.05,
+    axis lines=left,
+    xlabel={$z=\dfrac{\pi^{2}\alpha t}{L^{2}}$},
+    ylabel={$V=\dfrac{T(L,t)}{T_{M}}$},
+    thick,
+    domain=0:10,
+    samples=200,
+    clip=false
+]
+\addplot[very thick]
+expression{
+1
++2*(-exp(-1^2*x)
++exp(-2^2*x)
+-exp(-3^2*x)
++exp(-4^2*x)
+-exp(-5^2*x)
++exp(-6^2*x)
+-exp(-7^2*x)
++exp(-8^2*x)
+-exp(-9^2*x)
++exp(-10^2*x))
+};
+\addplot[dashed, thick] coordinates {(0,0.5) (10,0.5)};
+\addplot[dashed, thick] coordinates {(1.38,0) (1.38,0.5)};
+\draw[->, thick]
+(axis cs:2.8,0.62) -- (axis cs:1.6,0.5)
+node[pos=0, above right] {$50\%$};
+\node[below] at (axis cs:1.38,0) {$1.38$};
+\end{axis}
+\end{tikzpicture}
+
+
+% ============================================================
+}
+\caption{Normalized temperature rise curve (Parker function) used to determine thermal diffusivity.}
+\label{fig:parker}
+\end{figure}
+\newpage
+
+% ============================================================
+\section{UV-Vis-NIR Spectrometer}
+\begin{figure}[H]
+\centering
+\scalebox{0.75}{
+\begin{tikzpicture}[font=\small, >=latex, thick]
+\pgfmathsetmacro{\R}{1.5}
+\coordinate (SC) at (2.5, 0.0);
+
+% Sources
+\fill[blue!35]   (-8.6, 0.375) rectangle (-7.6, 1.125);
+\draw            (-8.6, 0.375) rectangle (-7.6, 1.125);
+\node[font=\normalsize] at (-8.1, 0.75) {$\mathrm{D_2}$};
+\fill[yellow!70] (-8.6,-0.375) rectangle (-7.6, 0.375);
+\draw            (-8.6,-0.375) rectangle (-7.6, 0.375);
+\node[font=\normalsize] at (-8.1, 0.0) {W};
+\fill[green!35]  (-8.6,-1.125) rectangle (-7.6,-0.375);
+\draw            (-8.6,-1.125) rectangle (-7.6,-0.375);
+\node[font=\normalsize] at (-8.1,-0.75) {Xe};
+\node[below, font=\small] at (-8.1,-1.125) {Source};
+\draw[dashed] (-7.6, 0.0) -- (-5.7, 0.0);
+
+% Monochromator
+\draw (-5.7,-0.5) rectangle (-3.5, 0.5);
+\node at (-4.6, 0.0) {Monochromator};
+\draw[dashed] (-3.5, 0.0) -- (-2.2, 0.0);
+
+% Beam splitter
+\coordinate (BSC) at (-2.0, 0.0);
+\draw (-2.35,-0.35) -- (-1.65, 0.35);
+\draw[->] (-2.0,-0.9) -- (-2.0,-0.37);
+\node[below, align=center] at (-2.0,-0.93) {\textbf{Beam splitter}};
+
+% Main beam
+\draw[dashed] (-1.65, 0.0) -- (SC);
+
+% Split beam path
+\draw[dashed] (-2.0, 0.35) -- (-2.0, 2.6);
+
+% Left top mirror
+\begin{scope}[shift={(-2.0, 2.6)}, rotate=-45]
+  \draw (-0.45,-0.13) rectangle (0.45, 0.13);
+  \fill[pattern=north east lines] (-0.45,-0.13) rectangle (0.45, 0.13);
+\end{scope}
+\draw[dashed] (-2.0, 2.6) -- (2.5, 2.6);
+
+% Right top mirror
+\begin{scope}[shift={(2.5, 2.6)}, rotate=45]
+  \draw (-0.45,-0.13) rectangle (0.45, 0.13);
+  \fill[pattern=north east lines] (-0.45,-0.13) rectangle (0.45, 0.13);
+\end{scope}
+\draw[dashed] (2.5, 2.6) -- (SC);
+
+\node[right] (ISLabel) at (3.6, 2.0) {Integration sphere};
+\draw[->] (ISLabel.west) -- ($ (SC) + (45:\R) $);
+\draw (SC) circle (\R);
+\fill[black] (SC) circle (0.42);
+\node (DetLbl) at (4.5,-1.2) {Detector};
+\draw[->] (DetLbl.west) -- ($ (SC) + (0.3,-0.3) $);
+\draw[->] ($ (SC) + (0.42,0) $) -- ($ (SC) + (\R-0.02, 0) $);
+
+% Sample
+\fill[black] ($ (SC) + (\R, 0) $) rectangle ($ (SC) + (\R+0.35, 0.22) $);
+\fill[black] ($ (SC) + (\R, 0) $) rectangle ($ (SC) + (\R+0.35,-0.22) $);
+\node[right] at ($ (SC) + (\R+0.37, 0) $) {Sample};
+
+% Reference
+\draw[->] ($ (SC) - (0, 0.42) $) -- ($ (SC) - (0, \R-0.02) $);
+\fill[black] ($ (SC) - (0.3, \R) $) rectangle ($ (SC) + (0.3, -\R-0.32) $);
+\node[below] at ($ (SC) - (0, \R+0.35) $) {Reference};
+\end{tikzpicture}
+
+
+% ============================================================
+}
+\caption{Schematic of a UV-Vis-NIR spectrometer with integrating sphere and detector configuration.}
+\label{fig:uvvis}
+\end{figure}
+\newpage
+
+\end{document}
